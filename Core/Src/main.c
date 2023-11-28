@@ -136,10 +136,10 @@ int main(void)
 	  float decibels = 20*log10(voltage/1.2);
 	  HAL_ADC_Stop(&hadc1);
 
-	  sprintf(message, "Temperature: %f /r/n", temperature_value);
-	  HAL_UART_Transmit(&huart2, (uint8_t *)message, strlen(message), HAL_MAX_DELAY);
-	  sprintf(message, "Decibels: %f /r/n", decibels);
-	  HAL_UART_Transmit(&huart2, (uint8_t *)message, strlen(message), HAL_MAX_DELAY);
+//	  sprintf(message, "Temperature: %f /r/n", temperature_value);
+//	  HAL_UART_Transmit(&huart2, (uint8_t *)message, strlen(message), HAL_MAX_DELAY);
+//	  sprintf(message, "Decibels: %f /r/n", decibels);
+//	  HAL_UART_Transmit(&huart2, (uint8_t *)message, strlen(message), HAL_MAX_DELAY);
 
 
 
