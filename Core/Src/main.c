@@ -22,6 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
+#include "math.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -70,6 +71,7 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
 	float temperature_value= {5};
+	float micValue;
 	char message[50];
 
 	uint8_t buttonState = {0};
@@ -111,17 +113,35 @@ int main(void)
 
 
 
-	  if (HAL_ADC_PollForConversion(&hadc1, 5) == HAL_OK) {
+	  if (HAL_ADC_PollForConversion(&hadc1, 100) == HAL_OK) {
 		  temperature_value = HAL_ADC_GetValue(&hadc1);
 		  temperature_value = temperature_value * (3.3/1024);
 		  temperature_value = (temperature_value - 0.5) * 10;
 
-		  if (temperature_value > 26) {
+		  if (temperature_value > 28) {
 			  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_10);
 		  }
 //		  sprintf(message, "Temperature: %f /r/n", temperature_value);
 //		  HAL_UART_Transmit(&huart2, (uint8_t *)message, strlen(message), HAL_MAX_DELAY);
 	  }
+
+	  HAL_ADC_Stop(&hadc1);
+
+	  HAL_ADC_Start(&hadc1);
+	  HAL_ADC_PollForConversion(&hadc1, 100);
+	  micValue = HAL_ADC_GetValue(&hadc1);
+
+
+	  float voltage = micValue*(3.3/1024);
+	  float decibels = 20*log10(voltage/1.2);
+	  HAL_ADC_Stop(&hadc1);
+
+	  sprintf(message, "Temperature: %f /r/n", temperature_value);
+	  HAL_UART_Transmit(&huart2, (uint8_t *)message, strlen(message), HAL_MAX_DELAY);
+	  sprintf(message, "Decibels: %f /r/n", decibels);
+	  HAL_UART_Transmit(&huart2, (uint8_t *)message, strlen(message), HAL_MAX_DELAY);
+
+
 
 	  uint8_t currentButtonState = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_9);
 
@@ -130,6 +150,9 @@ int main(void)
 	  }
 
 	  buttonState = currentButtonState;
+
+
+	  HAL_Delay(1000);
 
   }
   /* USER CODE END 3 */
@@ -204,13 +227,13 @@ static void MX_ADC1_Init(void)
   hadc1.Instance = ADC1;
   hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
   hadc1.Init.Resolution = ADC_RESOLUTION_12B;
-  hadc1.Init.ScanConvMode = DISABLE;
+  hadc1.Init.ScanConvMode = ENABLE;
   hadc1.Init.ContinuousConvMode = DISABLE;
   hadc1.Init.DiscontinuousConvMode = DISABLE;
   hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc1.Init.NbrOfConversion = 1;
+  hadc1.Init.NbrOfConversion = 2;
   hadc1.Init.DMAContinuousRequests = DISABLE;
   hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
@@ -223,6 +246,15 @@ static void MX_ADC1_Init(void)
   sConfig.Channel = ADC_CHANNEL_0;
   sConfig.Rank = 1;
   sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  */
+  sConfig.Channel = ADC_CHANNEL_11;
+  sConfig.Rank = 2;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
