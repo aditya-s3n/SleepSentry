@@ -70,7 +70,9 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
 	float temperature_value= {5};
-	char message[25];
+	char message[50];
+
+	uint8_t buttonState = {0};
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -104,6 +106,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+
 	  HAL_ADC_Start(&hadc1);
 
 
@@ -114,13 +117,19 @@ int main(void)
 		  temperature_value = (temperature_value - 0.5) * 10;
 
 		  if (temperature_value > 26) {
-			  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, SET);
-		  } else {
-			  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, RESET);
+			  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_10);
 		  }
-		  sprintf(message, "Temperature: %f /r/n", temperature_value);
-		  HAL_UART_Transmit(&huart2, (uint8_t *)message, strlen(message), HAL_MAX_DELAY);
+//		  sprintf(message, "Temperature: %f /r/n", temperature_value);
+//		  HAL_UART_Transmit(&huart2, (uint8_t *)message, strlen(message), HAL_MAX_DELAY);
 	  }
+
+	  uint8_t currentButtonState = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_9);
+
+	  if (buttonState == GPIO_PIN_SET && currentButtonState == GPIO_PIN_RESET) {
+		  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_6);
+	  }
+
+	  buttonState = currentButtonState;
 
   }
   /* USER CODE END 3 */
@@ -275,7 +284,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6|GPIO_PIN_10, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
@@ -283,12 +292,18 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : PA10 */
-  GPIO_InitStruct.Pin = GPIO_PIN_10;
+  /*Configure GPIO pins : PA6 PA10 */
+  GPIO_InitStruct.Pin = GPIO_PIN_6|GPIO_PIN_10;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PB9 */
+  GPIO_InitStruct.Pin = GPIO_PIN_9;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
