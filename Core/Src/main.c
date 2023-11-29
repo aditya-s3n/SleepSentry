@@ -22,7 +22,9 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
+#include <string.h>
 #include "math.h"
+#include "stdbool.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -42,6 +44,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
+DMA_HandleTypeDef hdma_adc1;
 
 UART_HandleTypeDef huart2;
 
@@ -52,6 +55,7 @@ UART_HandleTypeDef huart2;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
@@ -71,10 +75,10 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
 	float temperature_value= {5};
-	float micValue;
-	char message[50];
-
 	uint8_t buttonState = {0};
+
+
+
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -95,6 +99,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_ADC1_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
@@ -111,8 +116,6 @@ int main(void)
 
 	  HAL_ADC_Start(&hadc1);
 
-
-
 	  if (HAL_ADC_PollForConversion(&hadc1, 100) == HAL_OK) {
 		  temperature_value = HAL_ADC_GetValue(&hadc1);
 		  temperature_value = temperature_value * (3.3/1024);
@@ -121,27 +124,7 @@ int main(void)
 		  if (temperature_value > 28) {
 			  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_10);
 		  }
-//		  sprintf(message, "Temperature: %f /r/n", temperature_value);
-//		  HAL_UART_Transmit(&huart2, (uint8_t *)message, strlen(message), HAL_MAX_DELAY);
 	  }
-
-	  HAL_ADC_Stop(&hadc1);
-
-	  HAL_ADC_Start(&hadc1);
-	  HAL_ADC_PollForConversion(&hadc1, 100);
-	  micValue = HAL_ADC_GetValue(&hadc1);
-
-
-	  float voltage = micValue*(3.3/1024);
-	  float decibels = 20*log10(voltage/1.2);
-	  HAL_ADC_Stop(&hadc1);
-
-//	  sprintf(message, "Temperature: %f /r/n", temperature_value);
-//	  HAL_UART_Transmit(&huart2, (uint8_t *)message, strlen(message), HAL_MAX_DELAY);
-//	  sprintf(message, "Decibels: %f /r/n", decibels);
-//	  HAL_UART_Transmit(&huart2, (uint8_t *)message, strlen(message), HAL_MAX_DELAY);
-
-
 
 	  uint8_t currentButtonState = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_9);
 
@@ -150,9 +133,6 @@ int main(void)
 	  }
 
 	  buttonState = currentButtonState;
-
-
-	  HAL_Delay(1000);
 
   }
   /* USER CODE END 3 */
@@ -295,6 +275,22 @@ static void MX_USART2_UART_Init(void)
   /* USER CODE BEGIN USART2_Init 2 */
 
   /* USER CODE END USART2_Init 2 */
+
+}
+
+/**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA2_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA2_Stream0_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA2_Stream0_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA2_Stream0_IRQn);
 
 }
 
